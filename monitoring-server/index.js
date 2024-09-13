@@ -3,16 +3,16 @@ const minimist = require("minimist")
 
 const args =  minimist(process.argv);
 
-const SERVER_API =  args.SERVER_API ? args.SERVER_API : "http://localhost:5000/api/postdata/server";
-const LOG_INTERVAL = args.LOG_INTERVAL ? LOG_INTERVAL : 15000;
+const SERVER_API =  args.SERVER_API ? args.SERVER_API + "/api/postdata/server" : "http://localhost:5000/api/postdata/server";
+const TRAIN_UUID = args.TRAIN_UUID ? args.TRAIN_UUID : undefined;
+
 let firstTime = true;
 
-setInterval(async () => {
-  await log(SERVER_API, firstTime)
+async function main() {
+  await log(SERVER_API, firstTime);
   firstTime = false;
-}, LOG_INTERVAL);
-
-
+  main();
+}
 
 async function log(SERVER_API, firstTime) {
   let timeInfo = null;
@@ -112,7 +112,10 @@ async function log(SERVER_API, firstTime) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        "metrics": data,
+        "train_uuid": TRAIN_UUID
+      })
     })
     
     const response = await res.json();
@@ -122,3 +125,5 @@ async function log(SERVER_API, firstTime) {
     console.log("error",error)
   }
 }
+
+main()
