@@ -88,6 +88,7 @@ class WatchDawg:
                 try:
                     with open(self.log_file, "r") as file:
                         log_file = file.read();
+                        print(log_file)
                 except FileNotFoundError:
                     print("The file does not exist.")
                 except IOError:
