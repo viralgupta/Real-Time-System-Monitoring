@@ -6,7 +6,7 @@ import subprocess
 import tensorflow as tf
 
 class WatchDawg:
-    def __init__(self, url = "http://localhost:5000", log_interval = None, logFile = None):
+    def __init__(self, url = "http://localhost:5000", log_interval = None, logFile = "log.txt"):
         self.url = url
         self.logFile = logFile
         self.train_uuid = uuid.uuid4()
@@ -70,6 +70,8 @@ class WatchDawg:
 
         def on_epoch_end(self, epoch, logs=None):
             total_epoch_time = round(time.time() - self.epoch_begin[epoch], 2)
+            with open(self.log_file, "a") as file:
+                file.write(logs)
             self.callBackend("/epoch_end", {
                 "epoch_index": epoch,
                 "end_time": int(time.time() * 1000),
