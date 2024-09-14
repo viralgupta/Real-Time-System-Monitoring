@@ -76,15 +76,15 @@ app.use("/api/postdata/server", asyncHandler(async (req, res) => {
             rw: fs.rw
           })),
           fsStats: {
-            rx: req.body.metrics.fsStats ? req.body.metrics.fsStats.rx ?? 0 : 0,
-            wx: req.body.metrics.fsStats ? req.body.metrics.fsStats.wx ?? 0 : 0
+            rx: req.body.metrics.fsStats ? req.body.metrics.fsStats.rx_sec ?? 0 : 0,
+            wx: req.body.metrics.fsStats ? req.body.metrics.fsStats.wx_sec ?? 0 : 0
           }
         }
       ]
     })
   } else {
     localData.push(req.body.metrics)
-    io.in(req.body.train_uuid).emit(JSON.stringify(req.body.metrics))
+    io.in(req.body.train_uuid).emit("system_data", JSON.stringify(req.body.metrics))
     if (localData.length == 3) {
       const old_log = await SystemLog.findOne({
         train_uuid: req.body.train_uuid
@@ -113,8 +113,8 @@ app.use("/api/postdata/server", asyncHandler(async (req, res) => {
             rw: fs.rw
           })),
           fsStats: {
-            rx: log.fsStats ? log.fsStats.rx ?? 0 : 0,
-            wx: log.fsStats ? log.fsStats.wx ?? 0 : 0,
+            rx: log.fsStats ? log.fsStats.rx_sec ?? 0 : 0,
+            wx: log.fsStats ? log.fsStats.wx_sec ?? 0 : 0,
           }
         }));
 
@@ -136,7 +136,8 @@ app.post("/api/postdata/training/initializeModel", asyncHandler(async (req, res)
   await TrainingLog.create({
     uuid: body.model_uuid,
     model_name: body.model_name,
-    model_type: body.model_type
+    model_type: body.model_type,
+    status: "Training"
   })
 
   res.json({success: true})
@@ -250,20 +251,75 @@ app.post("/api/postdata/training/train_end", asyncHandler(async (req, res) => {
   }
 }));
 
+app.get("/api/server/getActiveServers", async (req, res) => {
+  const distinctUuids  = await SystemLog.distinct('system.uuid')
+
+  const systemDetails = await SystemLog.find(
+    { 'system.uuid': { $in: distinctUuids } },
+    { system: 1, _id: 0 } // Project only the 'system' field, exclude _id
+  );
+
+  const uniqueSystems = [];
+  const seenUuids = new Set();
+
+  systemDetails.forEach((entry) => {
+    const system = entry.system;
+    if (!seenUuids.has(system.uuid)) {
+      seenUuids.add(system.uuid);
+      uniqueSystems.push(system);
+    }
+  });
+  
+  res.json({data: uniqueSystems})
+})
+
+app.get("/api/server/getServerLogs/:uuid", async (req, res) => {
+  const logs = await SystemLog.find({ 'system.uuid': req.params.uuid });
+  res.json({data: logs})
+})
+
+app.get("/api/server/getServerLogsFromTrainUUID/:uuid", async (req, res) => {
+  const logs = await SystemLog.findOne({ 'train_uuid': req.params.uuid });
+  res.json({data: logs})
+})
+
+app.get("/api/training/getPendingTrainingLogs", async (req, res) => {
+  const logs = await TrainingLog.find({ status: "Training" });
+  res.json({data: logs})
+})
+
+app.get("/api/training/getOfflineTrainingLogs", async (req, res) => {
+  const logs = await TrainingLog.find({ status: "Finished" });
+  res.json({data: logs})
+})
+
+app.get("/api/training/getTrainingLog/:uuid", async (req, res) => {
+  try {
+    const log = await TrainingLog.findOne({ uuid: req.params.uuid });
+    res.json({ data: log });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+
 io.on("connection", (socket) => {
+  console.log("Connected to socket")
   socket.on('setup', () => {
+    console.log("Setup Recieved")
     socket.emit("connected");
   });
   socket.on("setupclose", () => {
+    console.log("Setup Close Recieved")
     socket.emit("disconnected")
   })
-  socket.on("join game", (room) => {
+  socket.on("join room", (room) => {
+    console.log("Joining Room", room)
     socket.join(room)
   })
   socket.on("leave game", (room) => {
+    console.log("Leaving Room")
     socket.leave(room)
   })
-  eventEmitter.on('sendLog', (room, message) => {
-    socket.to(room).emit('new_log', message);
-  });
 })

@@ -93,7 +93,7 @@ async function log(SERVER_API, firstTime) {
   const filteredGpuInfo = gpuInfo ? gpuInfo.map(gpu => filterKeys(gpu, ['vendor', 'model', 'memoryTotal', 'memoryFree', 'temperatureGpu', 'powerDraw'])) : null;
   const filteredOsInfo = osInfo ? filterKeys(osInfo, ['platform', 'distro', 'arch']) : null;
   const filteredFsInfo = fsInfo ? fsInfo.map(fs => filterKeys(fs, ['fs', 'type', 'size', 'available', 'rw'])) : null;
-  const filteredFsStats = fsStats ? filterKeys(fsStats, ['rx', 'wx']) : null;
+  const filteredFsStats = fsStats ? filterKeys(fsStats, ['rx_sec', 'wx_sec']) : null;
 
   const data = {
     time: filteredTimeInfo,
