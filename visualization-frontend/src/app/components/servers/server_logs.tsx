@@ -32,7 +32,7 @@ const ServerLogs = ({ data }: { data: any }) => {
                 <TableCell>{d.Logs.length}</TableCell>
                 <TableCell className="text-right">
                   <Link
-                    href={`/trainings/${d.train_uuid}`}
+                    href={`/training/live/${d.train_uuid}`}
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
                   >
                     View Training Logs
