@@ -47,7 +47,7 @@ class WatchDawg:
         def on_train_begin(self, logs=None):
             self.train_begin = time.time()
             self.callBackend("/train_begin", {
-                "start_time": self.train_begin,
+                "start_time": int(self.train_begin * 1000),
                 "model_uuid": self.train_uuid
             })
 
@@ -55,7 +55,7 @@ class WatchDawg:
             self.epoch_begin[epoch] = time.time()
             self.callBackend("/epoch_begin", {
                 "epoch_index": epoch,
-                "start_time": self.epoch_begin[epoch],
+                "start_time": int(self.epoch_begin[epoch] * 1000),
                 "model_uuid": self.train_uuid
             })
 
@@ -63,8 +63,8 @@ class WatchDawg:
             total_epoch_time = round(time.time() - self.epoch_begin[epoch], 2)
             self.callBackend("/epoch_end", {
                 "epoch_index": epoch,
-                "end_time": time.time(),
-                "total_time": total_epoch_time,
+                "end_time": int(time.time() * 1000),
+                "total_time": int(total_epoch_time * 1000),
                 "model_uuid": self.train_uuid,
                 "data": logs
             })
@@ -83,8 +83,8 @@ class WatchDawg:
                     print("An error occurred while reading the log file.")
             
             self.callBackend("/train_end", {
-                "end_time": time.time(),
-                "total_time": total_train_time,
+                "end_time": int(time.time() * 1000),
+                "total_time": int(total_train_time * 1000),
                 "model_uuid": self.train_uuid,
                 "log_file": log_file,
                 "data": logs,

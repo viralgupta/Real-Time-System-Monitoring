@@ -53,7 +53,7 @@ async function log(SERVER_API, firstTime) {
     gpuInfo = fetchedGpuInfo.controllers;
     osInfo = fetchedOsInfo;
     fsInfo = fetchedFsInfo;
-    fsStats = fetchedFsStats;
+    fsStats = fetchedFsStats ? fetchedFsStats : { rx: 0, wx: 0};
   } else {
     const [
       fetchedTimeInfo,
