@@ -29,6 +29,15 @@ class WatchDawg:
             args.append(f"--TRAIN_UUID={self.train_uuid}")
             self.system_logging_process = subprocess.Popen(args);
 
+    def initlizeModel(self, model):
+        model_name = model.name;
+        model_type = model.__class__.__name__;
+        
+        self.callBackend("/initializeModel", {
+            "model_name": model_name,
+            "model_type": model_type,
+            "model_uuid": str(self.train_uuid)
+        })
 
     def callBackend(self, path="", data={}):
         response = requests.post(f"{self.url}/api/postdata/training{path}", json=data)
